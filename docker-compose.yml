@@ -1,0 +1,27 @@
+services:
+  rt-auth-db:
+    image: postgres:17
+    container_name: rt-auth-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rentix_auth
+      POSTGRES_USER: rentix
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+    ports:
+      - "5443:5432"
+    volumes:
+      - rt-auth-data:/var/lib/postgresql
+    networks:
+      - rentix-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rentix -d rentix_auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  rt-auth-data:
+
+networks:
+  rentix-network:
+    external: true
