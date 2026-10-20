@@ -35,5 +35,14 @@ func (handler *AuthHandler) LoginHandler(cntx *gin.Context){
 
 
 func (handler *AuthHandler) RegisterHandler(cntx *gin.Context){
+	var input model.RegisterRequest
+	cntx.ShouldBindBodyWithJSON(&input)
 	
+	if err := handler.service.Register(input.Email, input.Password); err != nil{
+		cntx.Set("ERROR_CODE", err.Error())
+		return
+	}
+	cntx.JSON(201, gin.H{
+		"message": "Đăng ký thành công",
+	})
 }

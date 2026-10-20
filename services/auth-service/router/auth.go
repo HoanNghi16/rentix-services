@@ -17,6 +17,7 @@ func SetupRoute(db *gorm.DB) *gin.Engine {
 	server := gin.Default()
 	server.Use(middleware.ErrorHandler)
 	server.POST("/login", handler.LoginHandler)
+	server.POST("/register", handler.RegisterHandler)
 
 	return server
 }

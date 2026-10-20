@@ -13,6 +13,10 @@ type ErrorCode struct {
 }
 
 var ERROR_CODE = map[string]ErrorCode{
+	"EMAIL_ALREADY_USED":{
+		Status: 409,
+		Message: "Email đã tồn tại",
+	},
 	"WRONG_PASSWORD": {
 		Status:  400,
 		Message: "Sai mật khẩu",
