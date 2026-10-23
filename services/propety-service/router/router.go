@@ -36,7 +36,7 @@ func SetupRoutes(db *gorm.DB) *gin.Engine {
 	// --- Chưa làm
 	Room.GET("/")         //Danh sách phòng
 	Room.GET("/:room_id") //Chi tiết phòng
-	Room.POST("/") 	      //Tạo phòng
+	Room.POST("/", handler.CreateRoomHandler) 	      //Tạo phòng
 	
 
 	return router

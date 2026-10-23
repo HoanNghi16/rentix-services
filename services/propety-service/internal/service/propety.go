@@ -27,3 +27,17 @@ func (service *PropService) NewComplex(userID uint, input *model.Complex)(*model
 	}
 	return input, nil
 }
+
+
+
+func (service *PropService) NewRoom(complexID uint,input *model.Room)(*model.Room, error){
+	input.ComplexID = complexID;
+	if err := service.repo.CreateRoom(input); err != nil{
+		return nil, err
+	}
+	return input, nil
+}
+
+func (service *PropService) GetRooms(complexID uint)([]model.Room, error){
+	
+}

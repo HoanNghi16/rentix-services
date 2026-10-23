@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/HoanNghi16/rentix-services/propety-service/internal/model"
 	"github.com/HoanNghi16/rentix-services/propety-service/internal/service"
@@ -92,5 +93,47 @@ func (handler *PropHandler) CreateComplexHandler(cntx *gin.Context){
 	}
 
 	cntx.JSON(201, cmplx)
+
+}
+
+
+func (handler *PropHandler) CreateRoomHandler(cntx *gin.Context){
+	value, ok := cntx.Params.Get("complex_id")
+	
+	if !ok{
+		cntx.Status(404)
+		return
+	}
+
+	complexID, prs_err := strconv.ParseUint(value, 10, 10)
+
+	if prs_err != nil{
+		cntx.Error(prs_err)
+		return
+	}
+
+	var input *model.Room
+
+	if bnd_err := cntx.ShouldBindBodyWithJSON(&input); bnd_err != nil{
+		cntx.Error(bnd_err)
+		return
+	}
+
+	newRoom, crt_err := handler.service.NewRoom(uint(complexID), input)
+
+	if (crt_err != nil){
+		cntx.Error(crt_err)
+		return
+	}
+
+	resRoom := model.RoomResponse{
+		ID:	newRoom.ID,
+		ComplexID: newRoom.ComplexID,
+		RoomNumber: newRoom.RoomNumber,
+		Status: newRoom.Status,
+		Price: newRoom.Price,
+	}
+
+	cntx.JSON(201, resRoom)
 
 }

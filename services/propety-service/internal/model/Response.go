@@ -4,7 +4,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type RoomListResponse struct {
+type RoomResponse struct {
 	ID         uint            `json:"id"`
 	ComplexID  uint            `json:"complex_id"`
 	RoomNumber string          `json:"room_number"`

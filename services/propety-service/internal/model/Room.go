@@ -8,7 +8,7 @@ import (
 
 type Room struct {
 	ID         uint       `gorm:"primaryKey;autoIncrement;"`
-	ComplexID  uint       `gorm:"not null;uniqueIndex:idx_room_cmplx"`
+	ComplexID  uint       `gorm:"not null;uniqueIndex:idx_room_cmplx" json:"complex_id"`
 	Complex    Complex    `gorm:"foreignKey:ComplexID"`
 	RoomNumber string     `gorm:"not null;uniqueIndex:idx_room_cmplx" json:"room_number"`
 	Status     RoomStatus `gorm:"not null;default:EMPTY"`
