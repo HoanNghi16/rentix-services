@@ -23,7 +23,7 @@ func (repo *PropRepo) CreateRoom(input *model.Room) error{
 	return repo.db.Create(input).Error
 }
 
-func (repo *PropRepo) FindRoomByComplex(complexID uint) ([]model.Room, error){
+func (repo *PropRepo) FindRoomsByComplex(complexID uint) ([]model.Room, error){
 	var rooms []model.Room;
 
 	if sl_err := repo.db.Where("complex_id=?", complexID).Find(&rooms).Error; sl_err != nil{
@@ -47,4 +47,12 @@ func (repo *PropRepo) FindComplexByOwner(ownerID uint) (*model.Complex, error) {
 		return nil, err
 	}
 	return complex, nil
+}
+
+func (repo *PropRepo) FindComplexesByOwner(ownerID uint) ([]model.Complex, error){
+	var complexes []model.Complex
+	if err := repo.db.Where("owner_id=?", ownerID).Find(&complexes).Error; err != nil{
+		return nil, err
+	}
+	return complexes, nil
 }

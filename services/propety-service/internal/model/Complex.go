@@ -4,8 +4,8 @@ import "time"
 
 type Complex struct {
 	ID        uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	OwnerID   uint   `gorm:"not null" json:"owner_id"`
-	Name      string `gorm:"not null" json:"name"`
+	OwnerID   uint   `gorm:"not null;uniqueIndex:owner_cplxname_idx" json:"owner_id"`
+	Name      string `gorm:"not null;uniqueIndex:owner_cplxname_idx" json:"name"`
 	Avatar    string `json:"avatar"`
 	Address   string `json:"address"`
 	Ward      string `json:"ward"`
