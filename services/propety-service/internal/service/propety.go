@@ -39,5 +39,5 @@ func (service *PropService) NewRoom(complexID uint,input *model.Room)(*model.Roo
 }
 
 func (service *PropService) GetRooms(complexID uint)([]model.Room, error){
-	
+	return nil, nil
 }
