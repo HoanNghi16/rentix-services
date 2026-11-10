@@ -33,7 +33,7 @@ services:
     networks:
       - rentix-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U rentix -d rentix_auth"]
+      test: ["CMD-SHELL", "pg_isready -U rentix -d rentix_propety"]
       interval: 5s
       timeout: 5s
       retries: 5

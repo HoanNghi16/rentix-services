@@ -1,0 +1,56 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+	"time"
+
+	"github.com/HoanNghi16/rentix-services/api-gateway/internal/authclient"
+	"github.com/HoanNghi16/rentix-services/api-gateway/internal/handler"
+)
+
+func main() {
+	auth, err := authclient.NewFromEnv()
+	if err != nil {
+		log.Fatal("cannot configure auth gRPC client: ", err)
+	}
+	defer auth.Close()
+
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux, auth)
+	server := &http.Server{
+		Addr:              envOrDefault("GATEWAY_HTTP_ADDR", ":8080"),
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-stop
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		_ = server.Shutdown(ctx)
+	}()
+
+	log.Printf("API gateway listening on %s", server.Addr)
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal("gateway HTTP server stopped: ", err)
+	}
+}
+
+func envOrDefault(key, fallback string) string {
+	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
+		return value
+	}
+	return fallback
+}

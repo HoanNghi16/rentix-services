@@ -99,7 +99,6 @@ func (service *AuthService) Register(email string, password string)(error){
 	if user != nil{
 		return errors.New("EMAIL_ALREADY_USED")
 	}
-
 	hashed_password, h_err := bcrypt.GenerateFromPassword([]byte(password), 10)
 
 	if h_err != nil{

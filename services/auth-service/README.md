@@ -13,4 +13,14 @@ The auth service exposes its internal API over gRPC with mutual TLS. It has no H
 
 The server refuses to start when any TLS setting or the caller allowlist is missing. Client certificates must chain to the configured CA and contain at least one DNS SAN listed in `AUTH_ALLOWED_CLIENTS`. Common names are not used as identities.
 
-Run from this directory with `go run ./cmd/grpc`.
+## Local development certificates
+
+Create a local-only CA, auth server certificate, and gateway client certificate with:
+
+```powershell
+go run ./cmd/devcert
+```
+
+The generated `certs/` directory is ignored by Git. Its private keys are for local development only and must not be used in deployed environments. The gateway client identity is `api-gateway.rentix.internal`.
+
+Run from this directory with `go run ./cmd/grpc` or build and run `grpc.exe`.
