@@ -1,0 +1,10 @@
+{
+  "COMPLEX_CREATED": "complex.created",
+  "ROOM_CREATED": "room.created",
+  "ROOM_STATUS_CHANGED": "room.status.changed",
+  "OCCUPANCY_CREATED": "occupancy.created",
+  "OCCUPANCY_ENDED": "occupancy.ended",
+  "ASSIGNMENT_UPDATED": "assignment.updated",
+  "ROLE_UPDATED": "role.updated",
+  "PERMISSION_CHANGED": "permission.changed"
+}

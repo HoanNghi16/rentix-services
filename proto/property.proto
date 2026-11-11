@@ -1,11 +1,47 @@
 syntax = "proto3";
 
-service PropertyService{
-    rpc GetComplexes(ComplexesRequest) returns ComplexesResponse; //   /property/complexes
+package rentix.property.v1;
+
+option go_package = "github.com/HoanNghi16/rentix-services/proto/propertyv1;propertyv1";
+
+service PropertyService {
+    rpc GetComplexes(GetComplexesRequest) returns GetComplexesResponse; //  GET  /property/complex
+    rpc CreateComplex(CreateComplexRequest) returns CreateComplexResponse;  //            POST /property/complex
+}
+
+// Complex sẽ được tạo ở Property, Services tạo ở Billing Service
+
+message CreateComplexRequest{
+    uint64 user_id = 1;
+    string role = 2;
+    string name = 3;
+    string avatar = 4; // avatar fe-side upload 
+    string address = 5;
+    repeated uint64 employee_user_ids = 6; // employee user ids to assign
+    Services services = 7;
+}
+
+message CreateComplexResponse{
+    Complex complex = 1;
+}
+
+message Services{
+    ServiceSetting electricity = 1;
+    ServiceSetting water = 2;
+    ServiceSetting parking = 3;
+    ServiceSetting garbage = 4;
+    ServiceSetting elevator = 5;
+    ServiceSetting internet = 6;
+    ServiceSetting other = 7;
+}
+
+message ServiceSetting{
+    float price = 1;
+    string unit = 2; // "per_person"-> /Người | "kWh" -> /kWh | "per_room" -> "/Phòng" 
 }
 
 message Complex{
-    int32  id = 1;              
+    uint64 id = 1;              
 	string name = 2;
 	string avatar = 3;
 	string address = 4;      
@@ -15,11 +51,11 @@ message Complex{
     int32  inactive_rooms = 8;
 }
 
-message ComplexesRequest{
-    int32 user_id = 1;
+message GetComplexesRequest{
+    uint64 user_id = 1;
     string role = 2;
 }
 
-message ComplexesResponse{
+message GetComplexesResponse{
     repeated Complex complexes = 1;
 }

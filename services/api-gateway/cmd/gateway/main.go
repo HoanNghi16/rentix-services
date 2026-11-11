@@ -13,6 +13,7 @@ import (
 
 	"github.com/HoanNghi16/rentix-services/api-gateway/internal/authclient"
 	"github.com/HoanNghi16/rentix-services/api-gateway/internal/handler"
+	"github.com/HoanNghi16/rentix-services/api-gateway/internal/propertyclient"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,11 +23,22 @@ func main() {
 		log.Fatal("cannot configure auth gRPC client: ", err)
 	}
 	defer auth.Close()
+	property, err := propertyclient.NewFromEnv()
+	if err != nil {
+		log.Fatal("cannot configure property gRPC client: ", err)
+	}
+	defer property.Close()
+
+	accessSecret := os.Getenv("ACCESS_SECRET")
+	if strings.TrimSpace(accessSecret) == "" {
+		log.Fatal("ACCESS_SECRET is required to protect property routes")
+	}
 
 	gin.EnableJsonDecoderDisallowUnknownFields()
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
 	handler.RegisterRoutes(router, auth)
+	handler.RegisterPropertyRoutes(router, property, accessSecret)
 	server := &http.Server{
 		Addr:              envOrDefault("GATEWAY_HTTP_ADDR", ":8080"),
 		Handler:           router,

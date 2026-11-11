@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/HoanNghi16/rentix-services/propety-service/internal/model"
+	"github.com/HoanNghi16/rentix-services/property-service/internal/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -21,6 +21,7 @@ func ConnectDB() *gorm.DB {
 	db.AutoMigrate(
 		&model.Complex{},
 		&model.Room{},
+		&model.EmployeeAssignment{},
 	)
 
 	return db
