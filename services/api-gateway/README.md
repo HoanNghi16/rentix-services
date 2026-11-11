@@ -1,6 +1,6 @@
 # API gateway
 
-The gateway accepts client HTTP/JSON requests on port `8080` and calls auth-service over gRPC with mutual TLS.
+The gateway uses Gin to accept client HTTP/JSON requests on port `8080` and calls auth-service over gRPC with mutual TLS.
 
 ## Local run
 

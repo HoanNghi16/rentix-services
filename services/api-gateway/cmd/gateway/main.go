@@ -13,6 +13,7 @@ import (
 
 	"github.com/HoanNghi16/rentix-services/api-gateway/internal/authclient"
 	"github.com/HoanNghi16/rentix-services/api-gateway/internal/handler"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -22,11 +23,13 @@ func main() {
 	}
 	defer auth.Close()
 
-	mux := http.NewServeMux()
-	handler.RegisterRoutes(mux, auth)
+	gin.EnableJsonDecoderDisallowUnknownFields()
+	router := gin.New()
+	router.Use(gin.Logger(), gin.Recovery())
+	handler.RegisterRoutes(router, auth)
 	server := &http.Server{
 		Addr:              envOrDefault("GATEWAY_HTTP_ADDR", ":8080"),
-		Handler:           mux,
+		Handler:           router,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      15 * time.Second,

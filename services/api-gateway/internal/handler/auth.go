@@ -1,103 +1,79 @@
 package handler
 
 import (
-	"encoding/json"
-	"errors"
-	"io"
 	"net/http"
 	"strings"
 
 	"github.com/HoanNghi16/rentix-services/api-gateway/internal/authclient"
+	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type authHandler struct{ auth *authclient.Client }
 
-func RegisterRoutes(mux *http.ServeMux, auth *authclient.Client) {
+func RegisterRoutes(router gin.IRouter, auth *authclient.Client) {
 	handler := &authHandler{auth: auth}
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	router.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-	mux.HandleFunc("POST /auth/register", handler.register)
-	mux.HandleFunc("POST /auth/login", handler.login)
+	router.POST("/auth/register", handler.register)
+	router.POST("/auth/login", handler.login)
 }
 
 type credentialsRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
 }
 
-func (handler *authHandler) register(w http.ResponseWriter, r *http.Request) {
+func (handler *authHandler) register(c *gin.Context) {
 	var input credentialsRequest
-	if err := decodeJSON(w, r, &input); err != nil {
-		writeError(w, http.StatusBadRequest, "INVALID_INPUT", "request must contain valid email and password JSON")
+	if err := bindCredentials(c, &input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "INVALID_INPUT", "message": "request must contain a valid email and password"})
 		return
 	}
-	if strings.TrimSpace(input.Email) == "" || input.Password == "" {
-		writeError(w, http.StatusBadRequest, "INVALID_INPUT", "email and password are required")
-		return
-	}
-	_, err := handler.auth.Register(r.Context(), &authclient.RegisterRequest{Email: input.Email, Password: input.Password})
+	_, err := handler.auth.Register(c.Request.Context(), &authclient.RegisterRequest{Email: input.Email, Password: input.Password})
 	if err != nil {
-		writeGRPCError(w, err)
+		writeGRPCError(c, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]string{"message": "registered"})
+	c.JSON(http.StatusCreated, gin.H{"message": "registered"})
 }
 
-func (handler *authHandler) login(w http.ResponseWriter, r *http.Request) {
+func (handler *authHandler) login(c *gin.Context) {
 	var input credentialsRequest
-	if err := decodeJSON(w, r, &input); err != nil {
-		writeError(w, http.StatusBadRequest, "INVALID_INPUT", "request must contain valid email and password JSON")
+	if err := bindCredentials(c, &input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "INVALID_INPUT", "message": "request must contain a valid email and password"})
 		return
 	}
-	if strings.TrimSpace(input.Email) == "" || input.Password == "" {
-		writeError(w, http.StatusBadRequest, "INVALID_INPUT", "email and password are required")
-		return
-	}
-	response, err := handler.auth.Login(r.Context(), &authclient.LoginRequest{Email: input.Email, Password: input.Password})
+	response, err := handler.auth.Login(c.Request.Context(), &authclient.LoginRequest{Email: input.Email, Password: input.Password})
 	if err != nil {
-		writeGRPCError(w, err)
+		writeGRPCError(c, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, response)
+	c.JSON(http.StatusOK, response)
 }
 
-func decodeJSON(w http.ResponseWriter, r *http.Request, destination any) error {
-	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(destination); err != nil {
+func bindCredentials(c *gin.Context, input *credentialsRequest) error {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1<<20)
+	if err := c.ShouldBindJSON(input); err != nil {
 		return err
 	}
-	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
-		return errors.New("request must contain a single JSON value")
-	}
+	input.Email = strings.TrimSpace(input.Email)
 	return nil
 }
 
-func writeGRPCError(w http.ResponseWriter, err error) {
+func writeGRPCError(c *gin.Context, err error) {
 	switch status.Code(err) {
 	case codes.InvalidArgument:
-		writeError(w, http.StatusBadRequest, "INVALID_INPUT", "email and password are required")
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "INVALID_INPUT", "message": "email and password are required"})
 	case codes.Unauthenticated:
-		writeError(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", "invalid email or password")
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "INVALID_CREDENTIALS", "message": "invalid email or password"})
 	case codes.AlreadyExists:
-		writeError(w, http.StatusConflict, "EMAIL_ALREADY_USED", "email is already registered")
+		c.JSON(http.StatusConflict, gin.H{"error_code": "EMAIL_ALREADY_USED", "message": "email is already registered"})
 	case codes.Unavailable, codes.DeadlineExceeded:
-		writeError(w, http.StatusServiceUnavailable, "AUTH_UNAVAILABLE", "authentication service is unavailable")
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error_code": "AUTH_UNAVAILABLE", "message": "authentication service is unavailable"})
 	default:
-		writeError(w, http.StatusBadGateway, "AUTH_REQUEST_FAILED", "authentication request failed")
+		c.JSON(http.StatusBadGateway, gin.H{"error_code": "AUTH_REQUEST_FAILED", "message": "authentication request failed"})
 	}
-}
-
-func writeError(w http.ResponseWriter, status int, code, message string) {
-	writeJSON(w, status, map[string]string{"error_code": code, "message": message})
-}
-
-func writeJSON(w http.ResponseWriter, status int, value any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(value)
 }
