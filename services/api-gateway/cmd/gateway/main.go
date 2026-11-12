@@ -15,9 +15,11 @@ import (
 	"github.com/HoanNghi16/rentix-services/api-gateway/internal/handler"
 	"github.com/HoanNghi16/rentix-services/api-gateway/internal/propertyclient"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	auth, err := authclient.NewFromEnv()
 	if err != nil {
 		log.Fatal("cannot configure auth gRPC client: ", err)
