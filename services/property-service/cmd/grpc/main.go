@@ -1,15 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/HoanNghi16/rentix-services/property-service/internal/database"
 	"github.com/HoanNghi16/rentix-services/property-service/internal/grpcapi"
+	"github.com/HoanNghi16/rentix-services/property-service/internal/messaging"
 	"github.com/HoanNghi16/rentix-services/property-service/internal/repository"
 	"github.com/HoanNghi16/rentix-services/property-service/internal/service"
 	"github.com/HoanNghi16/rentix-services/property-service/internal/transport/grpcserver"
@@ -36,17 +39,48 @@ func main() {
 	}
 
 	server := grpc.NewServer(grpc.Creds(transportCredentials))
-	grpcserver.RegisterPropertyServiceServer(server, grpcserver.NewPropertyServer(service.NewService(repository.NewRepo(db))))
+	propertyService := service.NewService(repository.NewRepo(db))
+	grpcserver.RegisterPropertyServiceServer(server, grpcserver.NewPropertyServer(propertyService))
+	publisher, err := messaging.NewKafkaPublisherFromEnv()
+	if err != nil {
+		log.Fatal("cannot configure Kafka publisher: ", err)
+	}
+	defer publisher.Close()
+
+	workerContext, cancelWorker := context.WithCancel(context.Background())
+	defer cancelWorker()
+	workerDone := make(chan struct{})
+	go func() {
+		defer close(workerDone)
+		runOutboxPublisher(workerContext, propertyService, publisher)
+	}()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-stop
+		cancelWorker()
 		server.GracefulStop()
+		<-workerDone
 	}()
 
 	log.Printf("property gRPC server listening on %s", address)
 	if err := server.Serve(listener); err != nil {
 		log.Fatal(fmt.Errorf("property gRPC server stopped: %w", err))
+	}
+}
+
+func runOutboxPublisher(ctx context.Context, propertyService *service.PropService, publisher *messaging.KafkaPublisher) {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := propertyService.PublishOutbox(ctx, publisher); err != nil && ctx.Err() == nil {
+				log.Printf("outbox publisher iteration failed: %v", err)
+			}
+		}
 	}
 }

@@ -45,7 +45,7 @@ func (handler *propertyHandler) getComplexes(c *gin.Context) {
 		writePropertyGRPCError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"complexes": response.Complexes})
+	c.JSON(http.StatusOK, response)
 }
 
 func (handler *propertyHandler) createComplex(c *gin.Context) {

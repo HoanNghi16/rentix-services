@@ -2,6 +2,7 @@ package grpcserver
 
 import (
 	"context"
+	"log"
 	"strings"
 
 	"github.com/HoanNghi16/rentix-services/property-service/internal/grpcapi"
@@ -28,17 +29,13 @@ func (server *propertyServer) GetComplexes(_ context.Context, request *grpcapi.G
 	if request == nil || request.UserID == 0 || strings.TrimSpace(request.Role) == "" {
 		return nil, status.Error(codes.InvalidArgument, "authenticated user claims are required")
 	}
-	complexes, err := server.service.GetComplexes(request.UserID, request.Role)
+	log.Print(request.UserID, request.Role)
+	response, err := server.service.GetComplexes(request.UserID, request.Role)
 	if err != nil {
 		if err.Error() == "INVALID_ROLE" {
 			return nil, status.Error(codes.PermissionDenied, "role cannot access properties")
 		}
 		return nil, status.Error(codes.Internal, "could not load complexes")
-	}
-	response := &grpcapi.GetComplexesResponse{Complexes: make([]*grpcapi.Complex, 0, len(complexes))}
-	for i := range complexes {
-		complex := complexes[i]
-		response.Complexes = append(response.Complexes, &complex)
 	}
 	return response, nil
 }

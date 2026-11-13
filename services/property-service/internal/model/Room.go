@@ -13,6 +13,7 @@ type Room struct {
 	RoomNumber string     `gorm:"not null;uniqueIndex:idx_room_cmplx" json:"room_number"`
 	Status     RoomStatus `gorm:"not null;default:EMPTY"`
 	Price decimal.Decimal `gorm:"type:NUMERIC(16,3);not null;"`
+	CurrentEndDate *time.Time `gorm:"type:timestamp;default:null"`
 	CreatedAt  time.Time	
 	UpdatedAt time.Time
 }
