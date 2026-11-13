@@ -7,7 +7,31 @@ option go_package = "github.com/HoanNghi16/rentix-services/proto/propertyv1;prop
 service PropertyService {
     rpc GetComplexes(GetComplexesRequest) returns GetComplexesResponse; //  GET  /property/complex
     rpc CreateComplex(CreateComplexRequest) returns CreateComplexResponse;  //            POST /property/complex
+    rpc GetRooms(GetRoomsRequest) returns GetRoomsResponse; // GET /property/complex/{complex_id}/room
 }
+
+// GetRooms
+
+message Room{
+    int64 complex_id = 1;
+    int64 id = 2;
+    string current_end_date = 3 ;
+    string room_number = 4;
+    string status = 5; 
+    float price = 6;
+}
+
+
+message GetRoomsRequest{
+    int64 complex_id = 1;
+    int64 user_id = 2;
+    string role = 3;
+}
+
+message GetRoomsResponse{
+    repeated Room rooms = 1;
+}
+
 
 // Complex sẽ được tạo ở Property, Services tạo ở Billing Service
 
