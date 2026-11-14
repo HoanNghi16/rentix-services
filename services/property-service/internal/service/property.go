@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"math"
 	"time"
 
 	"github.com/HoanNghi16/rentix-services/property-service/internal/grpcapi"
 	"github.com/HoanNghi16/rentix-services/property-service/internal/model"
 	"github.com/HoanNghi16/rentix-services/property-service/internal/repository"
+	"github.com/HoanNghi16/rentix-services/property-service/internal/repository/dto"
 )
 
 type PropService struct {
@@ -44,6 +46,49 @@ func (service *PropService) GetComplexes(userID uint64, role string) (*grpcapi.G
 		return nil, err
 	}
 	return &grpcapi.GetComplexesResponse{Complexes: complexes}, nil
+}
+
+func (service *PropService) GetRooms(request *grpcapi.GetRoomsRequest) (*grpcapi.GetRoomsResponse, error) {
+	if request == nil || request.ComplexID <= 0 || request.UserID <= 0 || request.Role == "" {
+		return nil, errors.New("INVALID_ARGUMENT")
+	}
+
+	userID := uint(request.UserID)
+	complexID := uint(request.ComplexID)
+	var rooms []dto.RoomListItem
+	var err error
+	switch request.Role {
+	case "owner":
+		rooms, err = service.repo.GetRoomsForOwner(userID, complexID, nil)
+	case "manager":
+		rooms, err = service.repo.GetRoomsForEmployee(userID, complexID, nil)
+	default:
+		return nil, errors.New("INVALID_ROLE")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	response := &grpcapi.GetRoomsResponse{Rooms: make([]*grpcapi.Room, 0, len(rooms))}
+	for _, room := range rooms {
+		currentEndDate := ""
+		if !room.CurrentEndDate.IsZero() {
+			currentEndDate = room.CurrentEndDate.Format(time.RFC3339)
+		}
+		price, _ := room.Price.Float64()
+		if math.IsInf(price, 0) || math.IsNaN(price) {
+			return nil, errors.New("INVALID_ROOM_PRICE")
+		}
+		response.Rooms = append(response.Rooms, &grpcapi.Room{
+			ComplexID:      int64(room.ComplexID),
+			ID:             int64(room.ID),
+			CurrentEndDate: currentEndDate,
+			RoomNumber:     room.RoomNumber,
+			Status:         string(room.Status),
+			Price:          float32(price),
+		})
+	}
+	return response, nil
 }
 
 func (service *PropService) CreateComplex(request *grpcapi.CreateComplexRequest) (*grpcapi.Complex, error) {

@@ -1,3 +1,4 @@
 .env
 certs/
 *.exe
+*.ps1

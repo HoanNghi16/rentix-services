@@ -17,6 +17,7 @@ const propertyServiceName = "rentix.property.v1.PropertyService"
 type PropertyServiceServer interface {
 	GetComplexes(context.Context, *grpcapi.GetComplexesRequest) (*grpcapi.GetComplexesResponse, error)
 	CreateComplex(context.Context, *grpcapi.CreateComplexRequest) (*grpcapi.CreateComplexResponse, error)
+	GetRooms(context.Context, *grpcapi.GetRoomsRequest) (*grpcapi.GetRoomsResponse, error)
 }
 
 type propertyServer struct{ service *service.PropService }
@@ -54,6 +55,24 @@ func (server *propertyServer) CreateComplex(_ context.Context, request *grpcapi.
 	return &grpcapi.CreateComplexResponse{Complex: complex}, nil
 }
 
+func (server *propertyServer) GetRooms(_ context.Context, request *grpcapi.GetRoomsRequest) (*grpcapi.GetRoomsResponse, error) {
+	if request == nil || request.ComplexID <= 0 || request.UserID <= 0 || strings.TrimSpace(request.Role) == "" {
+		return nil, status.Error(codes.InvalidArgument, "complex ID and authenticated user claims are required")
+	}
+	response, err := server.service.GetRooms(request)
+	if err != nil {
+		switch err.Error() {
+		case "INVALID_ARGUMENT":
+			return nil, status.Error(codes.InvalidArgument, "complex ID and authenticated user claims are required")
+		case "INVALID_ROLE":
+			return nil, status.Error(codes.PermissionDenied, "role cannot access rooms")
+		default:
+			return nil, status.Error(codes.Internal, "could not load rooms")
+		}
+	}
+	return response, nil
+}
+
 func RegisterPropertyServiceServer(registrar grpc.ServiceRegistrar, server PropertyServiceServer) {
 	registrar.RegisterService(&PropertyService_ServiceDesc, server)
 }
@@ -88,12 +107,28 @@ func createComplexHandler(server any, ctx context.Context, decode func(any) erro
 	return interceptor(ctx, request, info, handler)
 }
 
+func getRoomsHandler(server any, ctx context.Context, decode func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
+	request := new(grpcapi.GetRoomsRequest)
+	if err := decode(request); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return server.(PropertyServiceServer).GetRooms(ctx, request)
+	}
+	info := &grpc.UnaryServerInfo{Server: server, FullMethod: "/" + propertyServiceName + "/GetRooms"}
+	handler := func(ctx context.Context, req any) (any, error) {
+		return server.(PropertyServiceServer).GetRooms(ctx, req.(*grpcapi.GetRoomsRequest))
+	}
+	return interceptor(ctx, request, info, handler)
+}
+
 var PropertyService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: propertyServiceName,
 	HandlerType: (*PropertyServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{MethodName: "GetComplexes", Handler: getComplexesHandler},
 		{MethodName: "CreateComplex", Handler: createComplexHandler},
+		{MethodName: "GetRooms", Handler: getRoomsHandler},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "property.proto",

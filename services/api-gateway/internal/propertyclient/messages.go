@@ -39,6 +39,41 @@ func (m *GetComplexesResponse) String() string {
 }
 func (*GetComplexesResponse) ProtoMessage() {}
 
+type Room struct {
+	ComplexID      int64   `protobuf:"varint,1,opt,name=complex_id,json=complexId,proto3" json:"complex_id"`
+	ID             int64   `protobuf:"varint,2,opt,name=id,proto3" json:"id"`
+	CurrentEndDate string  `protobuf:"bytes,3,opt,name=current_end_date,json=currentEndDate,proto3" json:"current_end_date"`
+	RoomNumber     string  `protobuf:"bytes,4,opt,name=room_number,json=roomNumber,proto3" json:"room_number"`
+	Status         string  `protobuf:"bytes,5,opt,name=status,proto3" json:"status"`
+	Price          float32 `protobuf:"fixed32,6,opt,name=price,proto3" json:"price"`
+}
+
+func (m *Room) Reset()         { *m = Room{} }
+func (m *Room) String() string { return fmt.Sprintf("Room{id:%d,room_number:%q}", m.ID, m.RoomNumber) }
+func (*Room) ProtoMessage()    {}
+
+type GetRoomsRequest struct {
+	ComplexID int64  `protobuf:"varint,1,opt,name=complex_id,json=complexId,proto3" json:"complex_id"`
+	UserID    int64  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id"`
+	Role      string `protobuf:"bytes,3,opt,name=role,proto3" json:"role"`
+}
+
+func (m *GetRoomsRequest) Reset() { *m = GetRoomsRequest{} }
+func (m *GetRoomsRequest) String() string {
+	return fmt.Sprintf("GetRoomsRequest{complex_id:%d,user_id:%d}", m.ComplexID, m.UserID)
+}
+func (*GetRoomsRequest) ProtoMessage() {}
+
+type GetRoomsResponse struct {
+	Rooms []*Room `protobuf:"bytes,1,rep,name=rooms,proto3" json:"rooms"`
+}
+
+func (m *GetRoomsResponse) Reset() { *m = GetRoomsResponse{} }
+func (m *GetRoomsResponse) String() string {
+	return fmt.Sprintf("GetRoomsResponse{rooms:%d}", len(m.Rooms))
+}
+func (*GetRoomsResponse) ProtoMessage() {}
+
 type CreateComplexResponse struct {
 	Complex *Complex `protobuf:"bytes,1,opt,name=complex,proto3" json:"complex"`
 }

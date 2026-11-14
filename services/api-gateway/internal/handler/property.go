@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"encoding/json"
+	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/HoanNghi16/rentix-services/api-gateway/internal/middleware"
@@ -26,7 +29,9 @@ func RegisterPropertyRoutes(router gin.IRouter, property *propertyclient.Client,
 	propertyRoutes := router.Group("/property")
 	propertyRoutes.Use(middleware.AuthMiddleware(accessSecret))
 	propertyRoutes.GET("/complex", handler.getComplexes)
+	propertyRoutes.GET("/complex/:complex_id/room", handler.getRooms)
 	propertyRoutes.POST("/complex", handler.createComplex)
+	// propertyRoutes.POST("/complex/:complex_id/room") 
 }
 
 func (handler *propertyHandler) getComplexes(c *gin.Context) {
@@ -41,6 +46,38 @@ func (handler *propertyHandler) getComplexes(c *gin.Context) {
 		return
 	}
 	response, err := handler.property.GetComplexes(c.Request.Context(), &propertyclient.GetComplexesRequest{UserID: userID, Role: role})
+	if err != nil {
+		writePropertyGRPCError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, response)
+}
+
+func (handler *propertyHandler) getRooms(c *gin.Context) {
+	complexID, err := strconv.ParseInt(c.Param("complex_id"), 10, 64)
+	if err != nil || complexID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "INVALID_INPUT", "message": "complex_id must be a positive integer"})
+		return
+	}
+	userID, ok := middleware.AuthenticatedUserID(c)
+	if !ok || userID > uint64(^uint64(0)>>1) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "UNAUTHENTICATED", "message": "valid bearer token required"})
+		return
+	}
+	role, ok := middleware.AuthenticatedRole(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "UNAUTHENTICATED", "message": "valid bearer token required"})
+		return
+	}
+	response, err := handler.property.GetRooms(c.Request.Context(), &propertyclient.GetRoomsRequest{
+		ComplexID: complexID,
+		UserID:    int64(userID),
+		Role:      role,
+	})
+
+	jsondt, _ := json.Marshal(response)
+
+	log.Print(string(jsondt))
 	if err != nil {
 		writePropertyGRPCError(c, err)
 		return

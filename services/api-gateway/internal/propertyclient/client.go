@@ -55,6 +55,12 @@ func (client *Client) GetComplexes(ctx context.Context, request *GetComplexesReq
 	return response, err
 }
 
+func (client *Client) GetRooms(ctx context.Context, request *GetRoomsRequest) (*GetRoomsResponse, error) {
+	response := new(GetRoomsResponse)
+	err := client.connection.Invoke(ctx, "/"+propertyServiceName+"/GetRooms", request, response)
+	return response, err
+}
+
 func (client *Client) CreateComplex(ctx context.Context, request *CreateComplexRequest) (*CreateComplexResponse, error) {
 	response := new(CreateComplexResponse)
 	err := client.connection.Invoke(ctx, "/"+propertyServiceName+"/CreateComplex", request, response)
