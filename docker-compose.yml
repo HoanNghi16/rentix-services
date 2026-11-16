@@ -1,4 +1,23 @@
 services:
+  rt-employee-db:
+    image: postgres:17
+    container_name: rt-employee-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rentix_employee
+      POSTGRES_USER: rentix
+      POSTGRES_PASSWORD: ${EMPLOYEE_DB_PASSWORD}
+    ports:
+      - "5445:5432"
+    volumes:
+      - rt-employee-data:/var/lib/postgresql
+    networks:
+      - rentix-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rentix -d rentix_employee"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   rt-auth-db:
     image: postgres:17
     container_name: rt-auth-db
@@ -72,6 +91,7 @@ services:
       retries: 12
       start_period: 20s
 volumes:
+  rt-employee-data:
   rt-auth-data:
   rt-propety-data:
   rt-kafka-data:
