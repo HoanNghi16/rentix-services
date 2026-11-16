@@ -2,3 +2,4 @@
 certs/
 *.exe
 *.ps1
+*.exe*
