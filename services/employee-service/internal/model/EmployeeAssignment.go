@@ -7,8 +7,10 @@ type EmployeeAssignment struct {
 	EmployeeID  uint     `gorm:"primaryKey"`
 	Employee    Employee `gorm:"foreignKey:EmployeeID"`
 	IsActive    bool `gorm:"default:true"`
+	IsCustomed bool `gorm:"default:true"`
 	Permissions datatypes.JSON
 	CurrentRoleID *uint `gorm:"default:null"`
-	CurrentRole *CustomRole `gorm:"foreignKey:CurrentRoleID"`
-	CurrentRoleName string `gorm:"default:Quản lý"`
+	CurrentRole *EmployeeRole `gorm:"foreignKey:CurrentRoleID"`
+	CurrentRoleName string `gorm:"default:Manager"`
+	PermissionVersion uint `gorm:"default:0;not null"`
 }
