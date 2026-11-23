@@ -2,6 +2,7 @@ package model
 
 import "time"
 
+// Bảng hợp đồng tạm
 type Contract struct {
 	ID        uint      `gorm:"not null;primaryKey;autoIncrement"`
 	OwnerID   uint      `gorm:"not null"`
