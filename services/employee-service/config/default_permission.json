@@ -1,3 +1,7 @@
 {
-
+    "":{
+        "read_allowed": true,
+        "create_allowed": true,
+        "update_allowed": true
+    }
 }

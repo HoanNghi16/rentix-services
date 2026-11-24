@@ -5,8 +5,8 @@ import "time"
 type ElectApprove struct {
 	ID         uint      `gorm:"primaryKey;autoIncrement"`
 	SentByID   uint      `gorm:"not null;"`
-	ApproveStatus ApproveStatus `gorm:"type:varchar(15);not null;default:PENDING"`
-	UpdatedBy uint      `gorm:"not null;"`
+	Status ApproveStatus `gorm:"type:varchar(15);not null;default:PENDING"`
+	UpdatedBy uint      `gorm:"not null;"` //OwnerID or EmployeeID
 	ImageURL   string    `gorm:"not null"`
 	UploadedAt time.Time `gorm:"default:now()"`
 
