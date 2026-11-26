@@ -33,11 +33,11 @@ func (repo *AuthRepo) FindByEmail(email string) (*model.User, error) {
 	return user, nil
 }
 
-func (repo *AuthRepo) CreateUser(user *model.User) error {
+func (repo *AuthRepo) CreateUser(user *model.User) (*model.User ,error) {
 	if err := repo.db.Create(user).Error; err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return user, nil
 }
 
 func (repo *AuthRepo) UpdateToken(userInput model.User) error {

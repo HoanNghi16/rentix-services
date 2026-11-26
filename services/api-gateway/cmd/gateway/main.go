@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/HoanNghi16/rentix-services/api-gateway/internal/authclient"
+	"github.com/HoanNghi16/rentix-services/api-gateway/internal/employeeclient"
 	"github.com/HoanNghi16/rentix-services/api-gateway/internal/handler"
 	"github.com/HoanNghi16/rentix-services/api-gateway/internal/propertyclient"
 	"github.com/gin-gonic/gin"
@@ -30,6 +31,11 @@ func main() {
 		log.Fatal("cannot configure property gRPC client: ", err)
 	}
 	defer property.Close()
+	employee, err := employeeclient.NewFromEnv()
+	if err != nil {
+		log.Fatal("cannot configure employee gRPC client: ", err)
+	}
+	defer employee.Close()
 
 	accessSecret := os.Getenv("ACCESS_SECRET")
 	if strings.TrimSpace(accessSecret) == "" {
@@ -41,6 +47,7 @@ func main() {
 	router.Use(gin.Logger(), gin.Recovery())
 	handler.RegisterRoutes(router, auth)
 	handler.RegisterPropertyRoutes(router, property, accessSecret)
+	handler.RegisterEmployeeRoutes(router, employee, accessSecret)
 	server := &http.Server{
 		Addr:              envOrDefault("GATEWAY_HTTP_ADDR", ":8080"),
 		Handler:           router,

@@ -9,6 +9,16 @@ option go_package = "github.com/HoanNghi16/rentix-services/proto/authv1;authv1";
 service AuthService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
+  rpc CreateMember(CreateMemberRequest) returns (CreateMemberResponse);
+}
+
+message CreateMemberRequest {
+  string email = 1;
+  string role = 2;
+}
+
+message CreateMemberResponse{
+  int32 user_id = 1;
 }
 
 message RegisterRequest {

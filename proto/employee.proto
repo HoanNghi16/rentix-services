@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package rentix.employee.v1;
+
+option go_package = "github.com/HoanNghi16/rentix-services/proto/employeev1;employeev1";
+
+service EmployeeService {
+  rpc GetEmployees(GetEmployeesRequest) returns (GetEmployeesResponse);
+  rpc CreateEmployee(CreateEmployeeRequest) returns (CreateEmployeeResponse);
+}
+
+message CreateEmployeeRequest{
+  string email = 1;
+  string name = 2;
+  string phone = 3;
+  string gender = 4;
+  date date_of_birth = 5;
+  repeated int64 complex_ids = 6;
+}
+
+message CreateEmployeeResponse{
+  string message = 1;
+  bool ok = 2;
+}
+
+message GetEmployeesRequest {
+  uint64 owner_id = 1;
+  string role = 2;
+}
+
+message EmployeeAssignment {
+  uint64 complex_id = 1;
+}
+
+message Employee {
+  uint64 user_id = 1;
+  string full_name = 2;
+  string email = 3;
+  string phone = 4;
+  repeated EmployeeAssignment assignments = 5;
+}
+
+message GetEmployeesResponse {
+  repeated Employee employees = 1;
+}

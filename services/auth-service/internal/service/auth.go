@@ -105,10 +105,33 @@ func (service *AuthService) Register(email string, password string)(error){
 		return errors.New("HASH_FAILED")
 	}
 
-	return  service.repo.CreateUser(&model.User{
+	_, err := service.repo.CreateUser(&model.User{
 		Email: email,
 		Password: string(hashed_password),
 	})
 
+	return  err
+
 }
 
+func (service *AuthService) CreateMember(email string, role string)(*uint, error){
+	if (role != "employee" && role != "tenant"){
+		return nil, errors.New("INVALID_ROLE")
+	}
+
+	hashPassword, h_err := bcrypt.GenerateFromPassword([]byte("1"), 10)
+	if (h_err != nil){
+		return nil, h_err
+	}
+
+	newMember := &model.User{
+		Email: email,
+		Password: string(hashPassword),
+		Role: role,
+	}
+	user, err := service.repo.CreateUser(newMember)
+	if err != nil{
+		return nil, err
+	}
+	return &user.ID, nil
+}

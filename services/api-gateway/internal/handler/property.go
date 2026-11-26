@@ -28,10 +28,10 @@ func RegisterPropertyRoutes(router gin.IRouter, property *propertyclient.Client,
 	handler := &propertyHandler{property: property}
 	propertyRoutes := router.Group("/property")
 	propertyRoutes.Use(middleware.AuthMiddleware(accessSecret))
-	propertyRoutes.GET("/complex", handler.getComplexes)
-	propertyRoutes.GET("/complex/:complex_id/room", handler.getRooms)
-	propertyRoutes.POST("/complex", handler.createComplex)
-	// propertyRoutes.POST("/complex/:complex_id/room") 
+	propertyRoutes.GET("/complexes", handler.getComplexes)
+	propertyRoutes.GET("/complexes/:complex_id/rooms", handler.getRooms)
+	propertyRoutes.POST("/complexes", handler.createComplex)
+	// propertyRoutes.POST("/complexes/:complex_id/rooms") -> tạo phòng trong complex 
 }
 
 func (handler *propertyHandler) getComplexes(c *gin.Context) {
